@@ -1,9 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { TattooRequest } from '@/types/tattoo';
+import { TattooRequest, TattooHistory, GeneratedImage } from '@/types/tattoo';
+import { saveTattooHistory } from '@/utils/storage';
+import Gallery from '@/components/Gallery';
 
 export default function Home() {
+  const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
+  
   const [formData, setFormData] = useState<TattooRequest>({
     style: '',
     size: '',
@@ -74,6 +78,23 @@ export default function Home() {
       });
       setImageLoadStatus(initialLoadStatus);
       
+      // 히스토리에 저장
+      const historyItem: TattooHistory = {
+        id: result.id,
+        prompt: result.prompt,
+        images: result.images.map((img: any, index: number) => ({
+          id: img.id,
+          url: img.url,
+          alt: img.alt,
+          size: img.size,
+          quality: img.quality,
+          createdAt: new Date()
+        })),
+        request: formData,
+        createdAt: new Date()
+      };
+      saveTattooHistory(historyItem);
+      
       // 이미지 로드 상태를 즉시 'loaded'로 설정 (테스트용)
       // setTimeout(() => {
       //   const loadedStatus: {[key: number]: 'loading' | 'loaded' | 'error'} = {};
@@ -110,8 +131,37 @@ export default function Home() {
           </p>
         </div>
 
-        {/* 입력 폼 */}
-        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+        {/* 탭 네비게이션 */}
+        <div className="flex justify-center mb-8">
+          <div className="bg-white rounded-xl p-1 shadow-lg">
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'create'
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              🎨 디자인 생성
+            </button>
+            <button
+              onClick={() => setActiveTab('gallery')}
+              className={`px-6 py-3 rounded-lg font-medium transition-all duration-200 ${
+                activeTab === 'gallery'
+                  ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
+              }`}
+            >
+              🖼️ 내 갤러리
+            </button>
+          </div>
+        </div>
+
+        {/* 탭 내용 */}
+        {activeTab === 'create' ? (
+          <>
+            {/* 입력 폼 */}
+            <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
             <span className="mr-2 text-purple-500">●</span> 타투 디자인 요구사항
           </h2>
@@ -369,29 +419,15 @@ export default function Home() {
                   <div className="mt-4 space-y-2">
                     <button
                       onClick={() => {
-                        const link = document.createElement('a');
-                        link.href = imageUrl;
-                        link.download = `타투디자인_${index + 1}.png`;
-                        link.click();
+                        window.open(imageUrl, '_blank');
                       }}
                       className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center justify-center"
-                    >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                      </svg>
-                      다운로드
-                    </button>
-                    <button
-                      onClick={() => {
-                        setImageLoadStatus(prev => ({ ...prev, [index]: 'loaded' }));
-                      }}
-                      className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center"
                     >
                       <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                       </svg>
-                      이미지 표시
+                      새창에서 보기
                     </button>
                     <button
                       onClick={() => {
@@ -415,6 +451,10 @@ export default function Home() {
             </div>
           </div>
         )}
+      </>
+    ) : (
+      <Gallery />
+    )}
       </div>
     </div>
   );

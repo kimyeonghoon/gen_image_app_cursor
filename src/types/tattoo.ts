@@ -34,8 +34,42 @@ export interface TattooRequest {
   location: string;
   theme: string;
   description: string;
-  colorPreference: 'black' | 'color' | 'both';
+  colorPreference: string;
   mood: string;
+}
+
+export interface GeneratedImage {
+  id: string;
+  url: string;
+  alt: string;
+  size: string;
+  quality: string;
+  createdAt: Date;
+  isFavorite?: boolean;
+  memo?: string;
+  tags?: string[];
+}
+
+export interface TattooHistory {
+  id: string;
+  prompt: string;
+  images: GeneratedImage[];
+  request: TattooRequest;
+  createdAt: Date;
+  isFavorite?: boolean;
+  memo?: string;
+  tags?: string[];
+}
+
+export interface GalleryFilters {
+  style?: string;
+  theme?: string;
+  dateRange?: {
+    start: Date;
+    end: Date;
+  };
+  favoritesOnly?: boolean;
+  searchQuery?: string;
 }
 
 export interface TattooResponse {
