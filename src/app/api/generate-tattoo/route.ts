@@ -42,6 +42,12 @@ export async function POST(request: NextRequest) {
           currentPrompt = optimizedPrompt + ' with alternative style';
         }
         
+        // 첫 번째 이미지가 실패하면 간단한 테스트 프롬프트 사용
+        if (i === 0 && images.length === 0) {
+          currentPrompt = 'A simple geometric pattern with clean lines';
+          console.log('간단한 테스트 프롬프트 사용:', currentPrompt);
+        }
+        
         const response = await openai.images.generate({
           model: process.env.OPENAI_MODEL || 'dall-e-3',
           prompt: currentPrompt,
@@ -50,14 +56,24 @@ export async function POST(request: NextRequest) {
           quality: (process.env.OPENAI_IMAGE_QUALITY as any) || 'standard',
         });
         
+        console.log(`이미지 ${i + 1} API 응답:`, {
+          hasData: !!response.data,
+          dataLength: response.data?.length,
+          firstImageUrl: response.data?.[0]?.url
+        });
+        
         if (response.data && response.data[0]?.url) {
-          images.push({
+          const imageData = {
             id: `img_${Date.now()}_${i}`,
             url: response.data[0].url,
             alt: `타투 디자인 ${i + 1}`,
             size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
             quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
-          });
+          };
+          images.push(imageData);
+          console.log(`이미지 ${i + 1} 성공적으로 추가:`, imageData);
+        } else {
+          console.error(`이미지 ${i + 1} 데이터 누락:`, response.data);
         }
         
         // API 호출 간격 조절 (rate limiting 방지)
@@ -73,8 +89,16 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 최종 결과 로깅
+    console.log('최종 이미지 생성 결과:', {
+      totalImages: images.length,
+      imageUrls: images.map(img => img.url),
+      images: images
+    });
+    
     // 최소 1개 이상의 이미지가 생성되었는지 확인
     if (images.length === 0) {
+      console.error('이미지가 하나도 생성되지 않음');
       return NextResponse.json(
         { error: '이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
         { status: 500 }
@@ -89,6 +113,7 @@ export async function POST(request: NextRequest) {
       request: body,
     };
 
+    console.log('성공적으로 반환할 결과:', result);
     return NextResponse.json(result);
 
   } catch (error) {
