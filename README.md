@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 요구사항 명세서
+# 맞춤 타투 디자인 생성기 플랫폼 - 기능 명세서
 
-## Getting Started
+## 개요
+사용자 맞춤형 타투 디자인을 OpenAI DALL·E 3 API를 활용하여 생성하는 Next.js 기반 웹 애플리케이션입니다.  
+사용자는 스타일, 크기, 위치, 테마, 분위기, 색상 등의 입력값을 바탕으로 고품질 타투 이미지를 빠르게 생성하고, 여러 시안을 비교·선택할 수 있습니다.
 
-First, run the development server:
+---
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+## 1. 사용자 인터페이스(UI) 및 입력 폼
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 1.1 타투 스타일 선택  
+- 옵션: 라인 아트, 추상, 고전, 미니멀리즘, 워터칼라, 트라이벌 등  
+- UI: 드롭다운 혹은 버튼 그룹 형태  
+- 다중 선택 불가, 단일 선택  
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1.2 크기 및 위치 입력  
+- 크기: 소형, 중형, 대형 (또는 픽셀 단위 자유 입력)  
+- 위치: 팔, 다리, 등, 손목 등 주요 부위 선택 옵션 제공  
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### 1.3 테마 선택  
+- 테마 옵션: 자연, 문양, 동물, 기호, 기타 자유 입력 텍스트  
 
-## Learn More
+### 1.4 세부 설명 입력  
+- 사용자가 원하는 분위기(예: 차분한, 강렬한), 색상(예: 흑백, 컬러) 및 추가 요구사항 자유 입력 텍스트 필드  
 
-To learn more about Next.js, take a look at the following resources:
+### 1.5 제출 버튼  
+- 입력값 검증 및 이미지 생성 요청 트리거
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+---
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## 2. 이미지 생성 및 처리
 
-## Deploy on Vercel
+### 2.1 DALL·E 3 API 연동  
+- Next.js 서버에서 OpenAI DALL·E 3 API 호출  
+- 사용자 입력값을 기반으로 프롬프트(prompt) 생성 및 전송  
+- 고해상도 이미지 생성 요청 (선명도, 디테일 강조)  
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 2.2 이미지 시안 생성  
+- 최소 3개 이상의 디자인 시안 생성 요청 및 응답 처리  
+- 이미지 로딩 중 스피너 또는 로딩 상태 UI 제공  
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+---
+
+## 3. 결과 화면 및 선택 기능
+
+### 3.1 디자인 시안 출력  
+- 생성된 타투 이미지 3~5개 썸네일 형태로 배열  
+- 썸네일 클릭 시 고화질 이미지 확대 보기  
+
+### 3.2 시안 선택 및 다운로드  
+- 원하는 디자인 선택 기능  
+- 선택한 이미지 원본 다운로드 버튼 제공 (PNG/JPEG 형식)  
+
+---
+
+## 4. 시스템 및 기술 요구사항
+
+### 4.1 프론트엔드  
+- Next.js (React 기반)  
+- 타입스크립트 권장  
+- UI 컴포넌트 라이브러리 사용 가능 (예: Chakra UI, Material UI)  
+
+### 4.2 백엔드  
+- Next.js API Routes 또는 별도의 Node.js 서버  
+- OpenAI 공식 Node.js SDK 사용 및 API 키 안전관리  
+
+### 4.3 보안 및 퍼포먼스  
+- API 키 환경변수로 관리 및 서버 사이드에서만 사용  
+- 이미지 생성 제한 및 요금 관리 고려 (사용자별 호출 제한)  
+- 입력값 검증으로 잘못된 API 호출 방지  
+
+---
+
+## 5. 기타
+
+### 5.1 반응형 UI 지원  
+- 모바일 및 데스크탑 호환  
+
+### 5.2 오류 처리  
+- 이미지 생성 실패 시 사용자 친화적 에러 메시지 출력  
+- 네트워크 연결 문제 및 API 호출 문제 대비  
+
+---
+
+# 요약
+
+| 주요 기능         | 설명                                  |
+|-----------------|-------------------------------------|
+| 입력 폼          | 스타일, 크기, 위치, 테마, 세부 설명 입력   |
+| 이미지 생성      | DALL·E 3 API 호출, 3개 이상 시안 생성      |
+| 시안 출력 및 선택 | 썸네일 표시, 확대, 다운로드, 재요청 가능     |
+| 기술 스택 및 보안  | Next.js, Node.js, API 키 서버 관리, 반응형 UI |
+
+---
