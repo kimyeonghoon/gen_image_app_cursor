@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, lazy, Suspense } from 'react';
-import { TattooRequest, TattooHistory, GeneratedImage } from '@/types/tattoo';
+import { TattooRequest, TattooHistory } from '@/types/tattoo';
 import { saveTattooHistory } from '@/utils/storage';
 import ImageOptimizer from '@/components/ImageOptimizer';
 import { useToast } from '@/components/Toast';
@@ -45,7 +45,7 @@ export default function Home() {
     }
   };
 
-  const handleImageError = (index: number, error: any) => {
+  const handleImageError = (index: number, error: unknown) => {
     console.error(`이미지 ${index + 1} 로드 실패:`, error);
     setImageLoadStatus(prev => ({ ...prev, [index]: 'error' }));
   };
@@ -73,7 +73,7 @@ export default function Home() {
 
       const result = await response.json();
       
-      const imageUrls = result.images.map((img: any) => img.url);
+      const imageUrls = result.images.map((img: { url: string }) => img.url);
       setGeneratedImages(imageUrls);
       
       // 이미지 로드 상태를 'loading'으로 초기화
@@ -87,7 +87,7 @@ export default function Home() {
       const historyItem: TattooHistory = {
         id: result.id,
         prompt: result.prompt,
-        images: result.images.map((img: any, index: number) => ({
+        images: result.images.map((img: { id: string; url: string; alt: string; size: string; quality: string }) => ({
           id: img.id,
           url: img.url,
           alt: img.alt,

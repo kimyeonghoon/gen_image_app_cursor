@@ -91,5 +91,5 @@ export interface TattooImage {
 export interface ApiError {
   message: string;
   code: string;
-  details?: any;
+  details?: unknown;
 }

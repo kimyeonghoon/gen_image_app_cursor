@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Image from 'next/image';
 
 interface ImageOptimizerProps {
   src: string;
@@ -11,7 +10,7 @@ interface ImageOptimizerProps {
   className?: string;
   priority?: boolean;
   onLoad?: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
 }
 
 export default function ImageOptimizer({
@@ -40,7 +39,7 @@ export default function ImageOptimizer({
     onLoad?.();
   };
 
-  const handleError = (error: any) => {
+  const handleError = (error: unknown) => {
     setIsLoading(false);
     setHasError(true);
     onError?.(error);

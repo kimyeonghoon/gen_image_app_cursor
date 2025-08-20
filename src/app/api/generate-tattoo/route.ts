@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
 
     // 프롬프트 생성
     const prompt = generateTattooPrompt(body);
-    let optimizedPrompt = optimizePromptForDalle(prompt);
+    const optimizedPrompt = optimizePromptForDalle(prompt);
     
     // 디버깅을 위한 프롬프트 로깅
     console.log('Generated prompt:', optimizedPrompt);
@@ -62,8 +62,8 @@ export async function POST(request: NextRequest) {
           model: config.openai.model,
           prompt: currentPrompt,
           n: 1, // DALL-E 3는 한 번에 1개 이미지만 생성 가능
-          size: config.openai.imageSize as any,
-          quality: config.openai.imageQuality as any,
+          size: config.openai.imageSize as '256x256' | '512x512' | '1024x1024' | '1792x1024' | '1024x1792',
+          quality: config.openai.imageQuality as 'standard' | 'hd',
         });
         
         console.log(`이미지 ${i + 1} API 응답:`, {
@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
           await new Promise(resolve => setTimeout(resolve, 2000));
         }
         
-      } catch (error: any) {
+             } catch (error: unknown) {
         console.error(`이미지 ${i + 1} 생성 실패:`, error);
         
         // 오류 발생 시에도 계속 진행 (부분적 성공 허용)

@@ -12,7 +12,7 @@ import {
 } from '@/utils/storage';
 
 interface GalleryProps {
-  onImageSelect?: (image: any) => void;
+  onImageSelect?: (image: { id: string; url: string; alt: string }) => void;
 }
 
 export default function Gallery({ onImageSelect }: GalleryProps) {

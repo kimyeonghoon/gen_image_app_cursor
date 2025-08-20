@@ -1,4 +1,4 @@
-import { TattooHistory, GeneratedImage } from '@/types/tattoo';
+import { TattooHistory } from '@/types/tattoo';
 
 const STORAGE_KEYS = {
   TATTOO_HISTORY: 'tattoo_history',

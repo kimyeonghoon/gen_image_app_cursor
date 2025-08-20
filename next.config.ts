@@ -11,7 +11,6 @@ const nextConfig: NextConfig = {
   
   // 성능 최적화
   experimental: {
-    optimizeCss: true,
     optimizePackageImports: ['@/components', '@/utils'],
   },
   
@@ -44,7 +43,6 @@ const nextConfig: NextConfig = {
   },
   
   // 빌드 최적화
-  swcMinify: true,
   compress: true,
   
   // 타입스크립트 설정

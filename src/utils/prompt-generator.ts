@@ -4,7 +4,7 @@ import { TattooRequest } from '@/types/tattoo';
  * 타투 디자인 요청을 기반으로 DALL-E 3 프롬프트를 생성합니다.
  */
 export function generateTattooPrompt(request: TattooRequest): string {
-  const { style, size, location, theme, description, colorPreference, mood } = request;
+  const { style, location, theme, description, colorPreference, mood } = request;
   
   // 완전히 일반적인 예술 디자인으로 프롬프트 생성
   let prompt = `Create a beautiful, detailed artistic design with the following characteristics:\n\n`;

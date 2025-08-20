@@ -45,7 +45,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     setToasts(prev => [...prev, newToast]);
 
     // 자동 제거
-    if (newToast.duration > 0) {
+    if (newToast.duration && newToast.duration > 0) {
       setTimeout(() => {
         hideToast(id);
       }, newToast.duration);
