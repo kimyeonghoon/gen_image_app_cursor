@@ -4,11 +4,13 @@ import { useState, lazy, Suspense } from 'react';
 import { TattooRequest, TattooHistory, GeneratedImage } from '@/types/tattoo';
 import { saveTattooHistory } from '@/utils/storage';
 import ImageOptimizer from '@/components/ImageOptimizer';
+import { useToast } from '@/components/Toast';
 
 // 코드 스플리팅을 위한 lazy loading
 const Gallery = lazy(() => import('@/components/Gallery'));
 
 export default function Home() {
+  const toast = useToast();
   const [activeTab, setActiveTab] = useState<'create' | 'gallery'>('create');
   
   const [formData, setFormData] = useState<TattooRequest>({
@@ -98,6 +100,14 @@ export default function Home() {
       };
       saveTattooHistory(historyItem);
       
+      // 성공 토스트 표시
+      toast.showToast({
+        type: 'success',
+        title: '타투 디자인 생성 완료!',
+        message: `${result.images.length}개의 디자인이 생성되었습니다.`,
+        duration: 3000
+      });
+      
       // 이미지 로드 상태를 즉시 'loaded'로 설정 (테스트용)
       // setTimeout(() => {
       //   const loadedStatus: {[key: number]: 'loading' | 'loaded' | 'error'} = {};
@@ -116,6 +126,14 @@ export default function Home() {
       setError(errorMessage);
       setGeneratedImages([]);
       setImageLoadStatus({});
+      
+      // 에러 토스트 표시
+      toast.showToast({
+        type: 'error',
+        title: '생성 실패',
+        message: errorMessage,
+        duration: 5000
+      });
     } finally {
       setIsLoading(false);
     }
