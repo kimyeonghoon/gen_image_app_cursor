@@ -48,6 +48,14 @@ export default function Home() {
   const handleImageError = (index: number, error: unknown) => {
     console.error(`이미지 ${index + 1} 로드 실패:`, error);
     setImageLoadStatus(prev => ({ ...prev, [index]: 'error' }));
+    
+    // 에러 발생 시 토스트 알림
+    toast.showToast({
+      type: 'warning',
+      title: '이미지 로딩 실패',
+      message: `이미지 ${index + 1}을 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.`,
+      duration: 4000
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {

@@ -3,10 +3,27 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // 이미지 최적화 설정
   images: {
-    domains: ['oaidalleapiprodscus.blob.core.windows.net'], // OpenAI DALL-E 이미지 도메인
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'oaidalleapiprodscus.blob.core.windows.net',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.blob.core.windows.net',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+    domains: ['oaidalleapiprodscus.blob.core.windows.net'],
     formats: ['image/webp', 'image/avif'],
     deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: 'attachment',
+    contentSecurityPolicy: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:;",
   },
   
   // 성능 최적화

@@ -99,6 +99,11 @@ export const validateConfig = (): string[] => {
     errors.push('MAX_REQUESTS_PER_HOUR는 1 이상의 값이어야 합니다.');
   }
   
+  // 배포 환경에서 이미지 도메인 허용 확인
+  if (config.app.environment === 'production') {
+    console.log('🔧 Production 환경: 이미지 도메인 설정 확인 필요');
+  }
+  
   return errors;
 };
 

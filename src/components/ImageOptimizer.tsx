@@ -47,9 +47,16 @@ export default function ImageOptimizer({
 
   // 에러 발생 시 fallback 이미지 사용
   const handleFallback = () => {
-    setImageSrc('/placeholder-image.svg');
-    setHasError(false);
-    setIsLoading(true);
+    // 외부 이미지 URL인 경우 직접 표시 시도
+    if (src.startsWith('http')) {
+      setImageSrc(src);
+      setHasError(false);
+      setIsLoading(true);
+    } else {
+      setImageSrc('/placeholder-image.svg');
+      setHasError(false);
+      setIsLoading(true);
+    }
   };
 
   if (hasError) {
