@@ -1,14 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { 
-  TATTOO_STYLES, 
-  TATTOO_SIZES, 
-  TATTOO_LOCATIONS, 
-  TATTOO_THEMES, 
-  MOOD_OPTIONS, 
-  COLOR_PREFERENCES 
-} from '@/lib/tattoo-data';
 import { TattooRequest } from '@/types/tattoo';
 
 export default function Home() {
@@ -25,6 +17,7 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [imageLoadStatus, setImageLoadStatus] = useState<{[key: number]: 'loading' | 'loaded' | 'error'}>({});
 
   const handleInputChange = (field: keyof TattooRequest, value: string) => {
     setFormData(prev => ({
@@ -33,10 +26,28 @@ export default function Home() {
     }));
   };
 
+  const handleImageLoad = (index: number) => {
+    // 실제 이미지가 로드되었는지 확인
+    const imgElement = document.querySelector(`img[src="${generatedImages[index]}"]`) as HTMLImageElement;
+    if (imgElement && imgElement.naturalWidth > 0 && imgElement.naturalHeight > 0) {
+      setImageLoadStatus(prev => ({ ...prev, [index]: 'loaded' }));
+    } else {
+      setImageLoadStatus(prev => ({ ...prev, [index]: 'error' }));
+    }
+  };
+
+  const handleImageError = (index: number, error: any) => {
+    console.error(`이미지 ${index + 1} 로드 실패:`, error);
+    setImageLoadStatus(prev => ({ ...prev, [index]: 'error' }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+    setError(null);
+    setGeneratedImages([]);
+    setImageLoadStatus({});
+
     try {
       const response = await fetch('/api/generate-tattoo', {
         method: 'POST',
@@ -52,255 +63,358 @@ export default function Home() {
       }
 
       const result = await response.json();
-      setGeneratedImages(result.images.map((img: any) => img.url));
-      setError(null); // 성공 시 에러 메시지 제거
       
+      const imageUrls = result.images.map((img: any) => img.url);
+      setGeneratedImages(imageUrls);
+      
+      // 이미지 로드 상태를 'loading'으로 초기화
+      const initialLoadStatus: {[key: number]: 'loading' | 'loaded' | 'error'} = {};
+      imageUrls.forEach((_: string, index: number) => {
+        initialLoadStatus[index] = 'loading';
+      });
+      setImageLoadStatus(initialLoadStatus);
+      
+      // 이미지 로드 상태를 즉시 'loaded'로 설정 (테스트용)
+      // setTimeout(() => {
+      //   const loadedStatus: {[key: number]: 'loading' | 'loaded' | 'error'} = {};
+      //   imageUrls.forEach((_: string, index: number) => {
+      //     loadedStatus[index] = 'loaded';
+      //     });
+      //   setImageLoadStatus(loadedStatus);
+      //   console.log('이미지 로드 상태를 loaded로 설정했습니다.');
+      // }, 1000);
+      
+
+
     } catch (error) {
       console.error('타투 디자인 생성 오류:', error);
       const errorMessage = error instanceof Error ? error.message : '알 수 없는 오류가 발생했습니다.';
       setError(errorMessage);
-      setGeneratedImages([]); // 에러 시 이미지 초기화
+      setGeneratedImages([]);
+      setImageLoadStatus({});
     } finally {
       setIsLoading(false);
     }
   };
 
-  const isFormValid = formData.style && formData.size && formData.location && formData.theme;
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-100 py-12 px-4">
+      <div className="max-w-6xl mx-auto">
         {/* 헤더 */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-800 mb-4">
-            🎨 타투 디자인 생성기
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+            AI 타투 디자인 생성기
           </h1>
-          <p className="text-lg text-gray-600">
-            AI가 당신만의 맞춤형 타투 디자인을 생성합니다
+          <p className="text-xl text-gray-600">
+            당신만의 독특한 타투 디자인을 AI와 함께 만들어보세요
           </p>
         </div>
 
-        <div className="max-w-4xl mx-auto">
-          {/* 입력 폼 */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-            <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-              원하는 타투 디자인을 설명해주세요
-            </h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-6">
-              {/* 스타일 선택 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  타투 스타일 *
-                </label>
-                <select
-                  value={formData.style}
-                  onChange={(e) => handleInputChange('style', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">스타일을 선택하세요</option>
-                  {TATTOO_STYLES.map((style) => (
-                    <option key={style.id} value={style.name}>
-                      {style.name} - {style.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
+        {/* 입력 폼 */}
+        <form onSubmit={handleSubmit} className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center">
+            <span className="mr-2 text-purple-500">●</span> 타투 디자인 요구사항
+          </h2>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* 스타일 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                스타일 *
+              </label>
+              <select
+                value={formData.style}
+                onChange={(e) => handleInputChange('style', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              >
+                <option value="">스타일을 선택하세요</option>
+                <option value="라인 아트">라인 아트</option>
+                <option value="미니멀">미니멀</option>
+                <option value="클래식">클래식</option>
+                <option value="모던">모던</option>
+                <option value="트리뷰널">트리뷰널</option>
+                <option value="워터컬러">워터컬러</option>
+                <option value="블랙워크">블랙워크</option>
+                <option value="뉴스쿨">뉴스쿨</option>
+                <option value="올드스쿨">올드스쿨</option>
+                <option value="일러스트레이션">일러스트레이션</option>
+              </select>
+            </div>
 
-              {/* 크기와 위치 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    크기 *
-                  </label>
-                  <select
-                    value={formData.size}
-                    onChange={(e) => handleInputChange('size', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">크기를 선택하세요</option>
-                    {TATTOO_SIZES.map((size) => (
-                      <option key={size.id} value={size.name}>
-                        {size.name} ({size.dimensions})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* 크기 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                크기 *
+              </label>
+              <select
+                value={formData.size}
+                onChange={(e) => handleInputChange('size', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              >
+                <option value="">크기를 선택하세요</option>
+                <option value="소형">소형 (5cm 이하)</option>
+                <option value="중형">중형 (5-15cm)</option>
+                <option value="대형">대형 (15cm 이상)</option>
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    위치 *
-                  </label>
-                  <select
-                    value={formData.location}
-                    onChange={(e) => handleInputChange('location', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                    required
-                  >
-                    <option value="">위치를 선택하세요</option>
-                    {TATTOO_LOCATIONS.map((location) => (
-                      <option key={location.id} value={location.name}>
-                        {location.name} - {location.description}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+            {/* 위치 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                위치 *
+              </label>
+              <select
+                value={formData.location}
+                onChange={(e) => handleInputChange('location', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              >
+                <option value="">위치를 선택하세요</option>
+                <option value="팔">팔</option>
+                <option value="다리">다리</option>
+                <option value="등">등</option>
+                <option value="가슴">가슴</option>
+                <option value="어깨">어깨</option>
+                <option value="목">목</option>
+                <option value="손목">손목</option>
+                <option value="발목">발목</option>
+                <option value="손가락">손가락</option>
+                <option value="발가락">발가락</option>
+              </select>
+            </div>
 
-              {/* 테마 선택 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  테마 *
-                </label>
-                <select
-                  value={formData.theme}
-                  onChange={(e) => handleInputChange('theme', e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  required
-                >
-                  <option value="">테마를 선택하세요</option>
-                  {TATTOO_THEMES.map((theme) => (
-                    <option key={theme.id} value={theme.name}>
-                      {theme.name} - {theme.description}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            {/* 테마 선택 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                테마 *
+              </label>
+              <select
+                value={formData.theme}
+                onChange={(e) => handleInputChange('theme', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                required
+              >
+                <option value="">테마를 선택하세요</option>
+                <option value="자연">자연</option>
+                <option value="동물">동물</option>
+                <option value="꽃">꽃</option>
+                <option value="기하학적">기하학적</option>
+                <option value="종교적">종교적</option>
+                <option value="문화적">문화적</option>
+                <option value="개인적">개인적</option>
+                <option value="추상적">추상적</option>
+                <option value="판타지">판타지</option>
+                <option value="빈티지">빈티지</option>
+              </select>
+            </div>
 
-              {/* 색상 선호도와 분위기 */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    색상 선호도
-                  </label>
-                  <select
-                    value={formData.colorPreference}
-                    onChange={(e) => handleInputChange('colorPreference', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    {COLOR_PREFERENCES.map((color) => (
-                      <option key={color.id} value={color.id}>
-                        {color.name} - {color.description}
-                      </option>
-                    ))}
-                  </select>
-                </div>
+            {/* 색상 선호도 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                색상 선호도
+              </label>
+              <select
+                value={formData.colorPreference}
+                onChange={(e) => handleInputChange('colorPreference', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">색상을 선택하세요</option>
+                <option value="black">흑백</option>
+                <option value="color">컬러</option>
+                <option value="pastel">파스텔</option>
+                <option value="vibrant">선명한 색상</option>
+              </select>
+            </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    분위기
-                  </label>
-                  <select
-                    value={formData.mood}
-                    onChange={(e) => handleInputChange('mood', e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-                  >
-                    <option value="">분위기를 선택하세요</option>
-                    {MOOD_OPTIONS.map((mood) => (
-                      <option key={mood} value={mood}>
-                        {mood}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-
-              {/* 추가 설명 */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  추가 설명
-                </label>
-                <textarea
-                  value={formData.description}
-                  onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="원하는 디자인의 세부사항이나 특별한 요구사항을 자유롭게 작성해주세요..."
-                  rows={4}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              {/* 제출 버튼 */}
-              <div className="pt-4">
-                <button
-                  type="submit"
-                  disabled={!isFormValid || isLoading}
-                  className={`w-full py-4 px-6 rounded-lg font-semibold text-lg transition-all duration-200 ${
-                    isFormValid && !isLoading
-                      ? 'bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 transform hover:scale-105'
-                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                  }`}
-                >
-                  {isLoading ? (
-                    <div className="flex items-center justify-center">
-                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white mr-3"></div>
-                      AI가 디자인을 생성하고 있습니다...
-                    </div>
-                  ) : (
-                    '🎨 타투 디자인 생성하기'
-                  )}
-                </button>
-              </div>
-            </form>
-            
-            {/* 에러 메시지 표시 */}
-            {error && (
-              <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-                <div className="flex items-center">
-                  <div className="flex-shrink-0">
-                    <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-800">
-                      오류가 발생했습니다
-                    </h3>
-                    <div className="mt-2 text-sm text-red-700">
-                      {error}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
+            {/* 분위기 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                분위기
+              </label>
+              <select
+                value={formData.mood}
+                onChange={(e) => handleInputChange('mood', e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              >
+                <option value="">분위기를 선택하세요</option>
+                <option value="우아한">우아한</option>
+                <option value="강렬한">강렬한</option>
+                <option value="신비로운">신비로운</option>
+                <option value="친근한">친근한</option>
+                <option value="드라마틱한">드라마틱한</option>
+                <option value="평화로운">평화로운</option>
+                <option value="에너지 넘치는">에너지 넘치는</option>
+                <option value="차분한">차분한</option>
+              </select>
+            </div>
           </div>
 
-          {/* 생성된 이미지 결과 */}
-          {generatedImages.length > 0 && (
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h2 className="text-2xl font-semibold text-gray-800 mb-6">
-                🎯 생성된 타투 디자인
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {generatedImages.map((imageUrl, index) => (
-                  <div key={index} className="text-center">
-                    <div className="relative group cursor-pointer">
-                      <img
-                        src={imageUrl}
-                        alt={`타투 디자인 ${index + 1}`}
-                        className="w-full h-64 object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-200"
-                      />
-                      <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                        <button className="opacity-0 group-hover:opacity-100 bg-white text-gray-800 px-4 py-2 rounded-lg font-medium transition-all duration-200 hover:bg-gray-100">
-                          🔍 확대보기
-                        </button>
+          {/* 추가 설명 */}
+          <div className="mt-6">
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              추가 설명
+            </label>
+            <textarea
+              value={formData.description}
+              onChange={(e) => handleInputChange('description', e.target.value)}
+              placeholder="원하는 디자인의 구체적인 설명이나 참고 이미지에 대한 설명을 자유롭게 작성해주세요..."
+              rows={4}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+            />
+          </div>
+
+          {/* 제출 버튼 */}
+          <div className="mt-8 text-center">
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:from-purple-700 hover:to-blue-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center mx-auto"
+            >
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  생성 중...
+                </>
+              ) : (
+                <>
+                  <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                  </svg>
+                  타투 디자인 생성하기
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* 에러 메시지 */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <div className="flex">
+              <svg className="h-5 w-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+              <span className="text-red-800">{error}</span>
+            </div>
+          </div>
+        )}
+
+        {/* 생성된 이미지 결과 */}
+        {generatedImages.length > 0 && (
+          <div className="mt-12">
+            <h2 className="text-2xl font-bold text-gray-900 mb-6 flex items-center justify-center">
+              <span className="mr-2 text-red-500">●</span> 생성된 타투 디자인
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {generatedImages.map((imageUrl, index) => (
+                <div key={index} className="text-center">
+                  <div className="relative group cursor-pointer">
+                                                              {/* 로딩 상태 오버레이 */}
+                     {imageLoadStatus[index] === 'loading' && (
+                       <div className="absolute inset-0 bg-gray-100 rounded-lg flex flex-col items-center justify-center z-20">
+                         <svg className="animate-spin h-8 w-8 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                         </svg>
+                         <span className="text-gray-600 text-sm">이미지 로드 중...</span>
+                       </div>
+                     )}
+
+                     {/* 에러 상태 오버레이 */}
+                     {imageLoadStatus[index] === 'error' && (
+                       <div className="absolute inset-0 bg-red-50 rounded-lg flex flex-col items-center justify-center text-red-700 z-20">
+                         <svg className="h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                         </svg>
+                         <span className="text-sm">로드 실패</span>
+                       </div>
+                     )}
+
+                                         {/* 이미지 (강제로 표시) */}
+                     <img
+                       src={imageUrl}
+                       alt={`타투 디자인 ${index + 1}`}
+                       className="w-full h-64 object-cover rounded-lg shadow-md group-hover:shadow-xl transition-shadow duration-200"
+                       style={{ 
+                         display: 'block',
+                         opacity: imageLoadStatus[index] === 'loaded' ? 1 : 0,
+                         transition: 'opacity 0.3s ease-in-out',
+                         position: 'relative',
+                         zIndex: imageLoadStatus[index] === 'loaded' ? 10 : 1
+                       }}
+                       onLoad={() => handleImageLoad(index)}
+                       onError={(e) => handleImageError(index, e)}
+                     />
+                     
+
+
+                    {/* 호버 오버레이 */}
+                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
+                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                        </svg>
                       </div>
                     </div>
-                    <div className="mt-4 space-y-2">
-                      <button className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors">
-                        💾 다운로드
-                      </button>
-                      <button className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors">
-                        🔄 다시 생성
-                      </button>
-                    </div>
                   </div>
-                ))}
-              </div>
+
+                  {/* 버튼들 */}
+                  <div className="mt-4 space-y-2">
+                    <button
+                      onClick={() => {
+                        const link = document.createElement('a');
+                        link.href = imageUrl;
+                        link.download = `타투디자인_${index + 1}.png`;
+                        link.click();
+                      }}
+                      className="w-full bg-green-500 text-white py-2 px-4 rounded-lg hover:bg-green-600 transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                      </svg>
+                      다운로드
+                    </button>
+                    <button
+                      onClick={() => {
+                        setImageLoadStatus(prev => ({ ...prev, [index]: 'loaded' }));
+                      }}
+                      className="w-full bg-yellow-500 text-white py-2 px-4 rounded-lg hover:bg-yellow-600 transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                      </svg>
+                      이미지 표시
+                    </button>
+                    <button
+                      onClick={() => {
+                        setGeneratedImages(prev => prev.filter((_, i) => i !== index));
+                        setImageLoadStatus(prev => {
+                          const newStatus = { ...prev };
+                          delete newStatus[index];
+                          return newStatus;
+                        });
+                      }}
+                      className="w-full bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors duration-200 flex items-center justify-center"
+                    >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                      </svg>
+                      다시 생성
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
