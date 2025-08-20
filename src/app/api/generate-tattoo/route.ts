@@ -25,23 +25,47 @@ export async function POST(request: NextRequest) {
     const prompt = generateTattooPrompt(body);
     const optimizedPrompt = optimizePromptForDalle(prompt);
 
-    // DALL-E 3 API 호출
-    const response = await openai.images.generate({
-      model: process.env.OPENAI_MODEL || 'dall-e-3',
-      prompt: optimizedPrompt,
-      n: parseInt(process.env.MAX_IMAGES_PER_REQUEST || '3'),
-      size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
-      quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
-    });
+    // DALL-E 3 API 호출 (한 번에 1개 이미지만 생성 가능하므로 반복 호출)
+    const maxImages = parseInt(process.env.MAX_IMAGES_PER_REQUEST || '3');
+    const images = [];
+    
+    for (let i = 0; i < maxImages; i++) {
+      try {
+        const response = await openai.images.generate({
+          model: process.env.OPENAI_MODEL || 'dall-e-3',
+          prompt: optimizedPrompt,
+          n: 1, // DALL-E 3는 한 번에 1개 이미지만 생성 가능
+          size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
+          quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
+        });
+        
+        if (response.data[0]?.url) {
+          images.push({
+            id: `img_${Date.now()}_${i}`,
+            url: response.data[0].url,
+            alt: `타투 디자인 ${i + 1}`,
+            size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
+            quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
+          });
+        }
+        
+        // API 호출 간격 조절 (rate limiting 방지)
+        if (i < maxImages - 1) {
+          await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+      } catch (error) {
+        console.error(`이미지 ${i + 1} 생성 실패:`, error);
+        // 개별 이미지 생성 실패 시에도 계속 진행
+      }
+    }
 
-    // 응답 데이터 변환
-    const images = response.data.map((image, index) => ({
-      id: `img_${Date.now()}_${index}`,
-      url: image.url || '',
-      alt: `타투 디자인 ${index + 1}`,
-      size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
-      quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
-    }));
+    // 최소 1개 이상의 이미지가 생성되었는지 확인
+    if (images.length === 0) {
+      return NextResponse.json(
+        { error: '이미지 생성에 실패했습니다. 잠시 후 다시 시도해주세요.' },
+        { status: 500 }
+      );
+    }
 
     const result = {
       id: `req_${Date.now()}`,
