@@ -93,3 +93,68 @@
 | 기술 스택 및 보안  | Next.js, Node.js, API 키 서버 관리, 반응형 UI |
 
 ---
+
+## 환경변수 설정
+
+프로젝트를 실행하기 전에 다음 환경변수를 설정해야 합니다:
+
+1. 프로젝트 루트에 `.env.local` 파일을 생성하세요
+2. 다음 내용을 추가하세요:
+
+```bash
+# OpenAI API Configuration
+OPENAI_API_KEY=your_openai_api_key_here
+
+# Application Configuration
+NEXT_PUBLIC_APP_NAME="타투 디자인 생성기"
+NEXT_PUBLIC_APP_DESCRIPTION="AI 기반 맞춤 타투 디자인 생성 플랫폼"
+
+# API Configuration
+OPENAI_MODEL="dall-e-3"
+OPENAI_IMAGE_SIZE="1024x1024"
+OPENAI_IMAGE_QUALITY="standard"
+
+# Rate Limiting
+MAX_REQUESTS_PER_HOUR=10
+MAX_IMAGES_PER_REQUEST=3
+```
+
+**주의**: `.env.local` 파일은 Git에 커밋하지 마세요. API 키가 노출될 수 있습니다.
+
+---
+
+# 구현 단계 계획
+
+## 1단계: 프로젝트 기반 구조 및 환경 설정 (1-2일)
+- [x] Next.js 15.5.0 + TypeScript + Tailwind CSS 설정 완료
+- [ ] OpenAI API 키 환경변수 설정
+- [ ] 프로젝트 메타데이터 및 타이틀 수정
+- [ ] 기본 폴더 구조 정리 (components, lib, types, utils)
+
+## 2단계: 핵심 컴포넌트 및 UI 구조 구현 (2-3일)
+- [ ] 타투 디자인 입력 폼 컴포넌트 생성
+  - 스타일 선택 드롭다운
+  - 크기/위치 입력 필드
+  - 테마 및 세부 설명 텍스트 영역
+- [ ] 메인 페이지 레이아웃 재구성
+- [ ] 반응형 디자인 적용
+
+## 3단계: OpenAI API 연동 및 백엔드 로직 구현 (2-3일)
+- [ ] Next.js API Routes 생성 (`/api/generate-tattoo`)
+- [ ] OpenAI DALL·E 3 API 연동
+- [ ] 프롬프트 생성 로직 구현
+- [ ] 이미지 생성 요청 및 응답 처리
+
+## 4단계: 이미지 결과 표시 및 사용자 인터랙션 구현 (2-3일)
+- [ ] 이미지 시안 그리드 레이아웃
+- [ ] 썸네일 클릭 시 확대 보기 모달
+- [ ] 이미지 다운로드 기능
+- [ ] 로딩 상태 및 에러 처리 UI
+
+## 5단계: 최적화 및 배포 준비 (1-2일)
+- [ ] 성능 최적화 (이미지 최적화, 코드 스플리팅)
+- [ ] 에러 바운더리 및 사용자 경험 개선
+- [ ] 환경별 설정 (개발/프로덕션)
+- [ ] 배포 및 테스트
+
+---
