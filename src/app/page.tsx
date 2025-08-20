@@ -392,51 +392,53 @@ export default function Home() {
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {generatedImages.map((imageUrl, index) => (
-                <div key={index} className="text-center">
-                  <div className="relative group cursor-pointer">
-                                                              {/* 로딩 상태 오버레이 */}
-                     {imageLoadStatus[index] === 'loading' && (
-                       <div className="absolute inset-0 bg-gray-100 rounded-lg flex flex-col items-center justify-center z-20">
-                         <svg className="animate-spin h-8 w-8 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                         </svg>
-                         <span className="text-gray-600 text-sm">이미지 로드 중...</span>
-                       </div>
-                     )}
+                                   <div key={index} className="text-center">
+                     <div className="relative group cursor-pointer">
+                       {/* 로딩 상태 오버레이 */}
+                       {imageLoadStatus[index] === 'loading' && (
+                         <div className="absolute inset-0 bg-gray-100 rounded-lg flex flex-col items-center justify-center z-30">
+                           <svg className="animate-spin h-8 w-8 text-gray-500 mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                           </svg>
+                           <span className="text-gray-600 text-sm">이미지 로드 중...</span>
+                         </div>
+                       )}
 
-                     {/* 에러 상태 오버레이 */}
-                     {imageLoadStatus[index] === 'error' && (
-                       <div className="absolute inset-0 bg-red-50 rounded-lg flex flex-col items-center justify-center text-red-700 z-20">
-                         <svg className="h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                         </svg>
-                         <span className="text-sm">로드 실패</span>
-                       </div>
-                     )}
+                       {/* 에러 상태 오버레이 */}
+                       {imageLoadStatus[index] === 'error' && (
+                         <div className="absolute inset-0 bg-red-50 rounded-lg flex flex-col items-center justify-center text-red-700 z-30">
+                           <svg className="h-8 w-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                           </svg>
+                           <span className="text-sm">로드 실패</span>
+                         </div>
+                       )}
 
-                                         {/* 최적화된 이미지 */}
-                     <ImageOptimizer
-                       src={imageUrl}
-                       alt={`타투 디자인 ${index + 1}`}
-                       width={400}
-                       height={256}
-                       className="w-full h-64 shadow-md group-hover:shadow-xl transition-shadow duration-200"
-                       onLoad={() => handleImageLoad(index)}
-                       onError={(e) => handleImageError(index, e)}
-                     />
+                       {/* 최적화된 이미지 - z-index 명시적 설정 */}
+                       <div className="relative z-10">
+                         <ImageOptimizer
+                           src={imageUrl}
+                           alt={`타투 디자인 ${index + 1}`}
+                           width={400}
+                           height={256}
+                           className="w-full h-64 shadow-md group-hover:shadow-xl transition-shadow duration-200"
+                           onLoad={() => handleImageLoad(index)}
+                           onError={(e) => handleImageError(index, e)}
+                         />
+                       </div>
                      
 
 
-                    {/* 호버 오버레이 */}
-                    <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-200 rounded-lg flex items-center justify-center">
-                      <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                        <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
-                        </svg>
-                      </div>
-                    </div>
+                                         {/* 호버 오버레이 - 이미지 가시성 개선 */}
+                     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 transition-all duration-200 rounded-lg flex items-center justify-center pointer-events-none">
+                       <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                         <svg className="w-8 h-8 text-white drop-shadow-lg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
+                         </svg>
+                       </div>
+                     </div>
                   </div>
 
                   {/* 버튼들 */}

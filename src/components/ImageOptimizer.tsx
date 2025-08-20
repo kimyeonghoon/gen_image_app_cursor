@@ -80,7 +80,7 @@ export default function ImageOptimizer({
     <div className={`relative ${className}`}>
       {/* 로딩 오버레이 */}
       {isLoading && (
-        <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-gray-100 rounded-lg flex items-center justify-center z-20">
           <div className="text-center">
             <svg className="animate-spin h-6 w-6 text-gray-400 mx-auto mb-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
@@ -91,14 +91,14 @@ export default function ImageOptimizer({
         </div>
       )}
 
-      {/* 최적화된 이미지 */}
+      {/* 최적화된 이미지 - z-index 조정으로 가시성 향상 */}
       <img
         ref={imgRef}
         src={imageSrc}
         alt={alt}
         width={width}
         height={height}
-        className={`w-full h-full object-cover rounded-lg transition-opacity duration-300 ${
+        className={`w-full h-full object-cover rounded-lg transition-opacity duration-300 relative z-10 ${
           isLoading ? 'opacity-0' : 'opacity-100'
         }`}
         loading={priority ? 'eager' : 'lazy'}
