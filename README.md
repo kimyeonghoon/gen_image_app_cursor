@@ -125,38 +125,85 @@ MAX_IMAGES_PER_REQUEST=3
 
 ---
 
+# 🚀 배포 가이드
+
+## 환경 설정
+
+1. **환경변수 파일 생성**
+   ```bash
+   cp env.example .env.local
+   ```
+
+2. **OpenAI API 키 설정**
+   `.env.local` 파일에서 `OPENAI_API_KEY`를 실제 API 키로 변경
+
+3. **환경별 설정**
+   - 개발: `NODE_ENV=development`
+   - 프로덕션: `NODE_ENV=production`
+
+## 빌드 및 배포
+
+### 로컬 테스트
+```bash
+npm run dev          # 개발 서버 실행
+npm run build        # 프로덕션 빌드
+npm run start        # 프로덕션 서버 실행
+```
+
+### 배포 전 체크리스트
+- [ ] 환경변수 설정 완료
+- [ ] OpenAI API 키 유효성 확인
+- [ ] 빌드 에러 없음 (`npm run build`)
+- [ ] 타입 체크 통과 (`npm run type-check`)
+- [ ] 린트 에러 없음 (`npm run lint`)
+
+### 배포 명령어
+```bash
+npm run deploy:build  # 빌드 및 정리
+npm run deploy:start  # 프로덕션 서버 시작
+```
+
+## 지원 플랫폼
+
+- **Vercel**: `vercel --prod`
+- **Netlify**: `netlify deploy --prod`
+- **AWS**: `npm run build && aws s3 sync .next s3://your-bucket`
+- **Docker**: `docker build -t tattoo-generator . && docker run -p 3000:3000 tattoo-generator`
+
+---
+
 # 구현 단계 계획
 
-## 1단계: 프로젝트 기반 구조 및 환경 설정 (1-2일)
+## 1단계: 프로젝트 기반 구조 및 환경 설정 (1-2일) ✅
 - [x] Next.js 15.5.0 + TypeScript + Tailwind CSS 설정 완료
-- [ ] OpenAI API 키 환경변수 설정
-- [ ] 프로젝트 메타데이터 및 타이틀 수정
-- [ ] 기본 폴더 구조 정리 (components, lib, types, utils)
+- [x] OpenAI API 키 환경변수 설정
+- [x] 프로젝트 메타데이터 및 타이틀 수정
+- [x] 기본 폴더 구조 정리 (components, lib, types, utils)
 
-## 2단계: 핵심 컴포넌트 및 UI 구조 구현 (2-3일)
-- [ ] 타투 디자인 입력 폼 컴포넌트 생성
+## 2단계: 핵심 컴포넌트 및 UI 구조 구현 (2-3일) ✅
+- [x] 타투 디자인 입력 폼 컴포넌트 생성
   - 스타일 선택 드롭다운
   - 크기/위치 입력 필드
   - 테마 및 세부 설명 텍스트 영역
-- [ ] 메인 페이지 레이아웃 재구성
-- [ ] 반응형 디자인 적용
+- [x] 메인 페이지 레이아웃 재구성
+- [x] 반응형 디자인 적용
 
-## 3단계: OpenAI API 연동 및 백엔드 로직 구현 (2-3일)
-- [ ] Next.js API Routes 생성 (`/api/generate-tattoo`)
-- [ ] OpenAI DALL·E 3 API 연동
-- [ ] 프롬프트 생성 로직 구현
-- [ ] 이미지 생성 요청 및 응답 처리
+## 3단계: OpenAI API 연동 및 백엔드 로직 구현 (2-3일) ✅
+- [x] Next.js API Routes 생성 (`/api/generate-tattoo`)
+- [x] OpenAI DALL·E 3 API 연동
+- [x] 프롬프트 생성 로직 구현
+- [x] 이미지 생성 요청 및 응답 처리
 
-## 4단계: 이미지 결과 표시 및 사용자 인터랙션 구현 (2-3일)
-- [ ] 이미지 시안 그리드 레이아웃
-- [ ] 썸네일 클릭 시 확대 보기 모달
-- [ ] 이미지 다운로드 기능
-- [ ] 로딩 상태 및 에러 처리 UI
+## 4단계: 이미지 결과 표시 및 사용자 인터랙션 구현 (2-3일) ✅
+- [x] 이미지 시안 그리드 레이아웃
+- [x] 썸네일 클릭 시 확대 보기 모달
+- [x] 이미지 다운로드 기능
+- [x] 로딩 상태 및 에러 처리 UI
 
-## 5단계: 최적화 및 배포 준비 (1-2일)
-- [ ] 성능 최적화 (이미지 최적화, 코드 스플리팅)
-- [ ] 에러 바운더리 및 사용자 경험 개선
-- [ ] 환경별 설정 (개발/프로덕션)
-- [ ] 배포 및 테스트
+## 5단계: 최적화 및 배포 준비 (1-2일) ✅
+- [x] 성능 최적화 (이미지 최적화, 코드 스플리팅)
+- [x] 에러 바운더리 및 사용자 경험 개선
+- [x] 환경별 설정 (개발/프로덕션)
+- [x] 배포 및 테스트
 
 ---
