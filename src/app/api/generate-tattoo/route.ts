@@ -24,66 +24,52 @@ export async function POST(request: NextRequest) {
     // 프롬프트 생성
     const prompt = generateTattooPrompt(body);
     let optimizedPrompt = optimizePromptForDalle(prompt);
+    
+    // 디버깅을 위한 프롬프트 로깅
+    console.log('Generated prompt:', optimizedPrompt);
 
     // DALL-E 3 API 호출 (한 번에 1개 이미지만 생성 가능하므로 반복 호출)
     const maxImages = parseInt(process.env.MAX_IMAGES_PER_REQUEST || '3');
     const images = [];
-    let retryCount = 0;
-    const maxRetries = 2;
     
     for (let i = 0; i < maxImages; i++) {
-      let success = false;
-      retryCount = 0;
-      
-      while (!success && retryCount <= maxRetries) {
-        try {
-          const response = await openai.images.generate({
-            model: process.env.OPENAI_MODEL || 'dall-e-3',
-            prompt: optimizedPrompt,
-            n: 1, // DALL-E 3는 한 번에 1개 이미지만 생성 가능
+      try {
+        // 각 이미지마다 약간 다른 프롬프트 변형 사용
+        let currentPrompt = optimizedPrompt;
+        if (i === 1) {
+          currentPrompt = optimizedPrompt + ' with different composition';
+        } else if (i === 2) {
+          currentPrompt = optimizedPrompt + ' with alternative style';
+        }
+        
+        const response = await openai.images.generate({
+          model: process.env.OPENAI_MODEL || 'dall-e-3',
+          prompt: currentPrompt,
+          n: 1, // DALL-E 3는 한 번에 1개 이미지만 생성 가능
+          size: (process.env.OPENAI_IMAGE_SIZE as any) || '1024x1024',
+          quality: (process.env.OPENAI_IMAGE_QUALITY as any) || 'standard',
+        });
+        
+        if (response.data && response.data[0]?.url) {
+          images.push({
+            id: `img_${Date.now()}_${i}`,
+            url: response.data[0].url,
+            alt: `타투 디자인 ${i + 1}`,
             size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
             quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
           });
-          
-          if (response.data[0]?.url) {
-            images.push({
-              id: `img_${Date.now()}_${i}`,
-              url: response.data[0].url,
-              alt: `타투 디자인 ${i + 1}`,
-              size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
-              quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
-            });
-            success = true;
-          }
-          
-        } catch (error: any) {
-          retryCount++;
-          console.error(`이미지 ${i + 1} 생성 실패 (시도 ${retryCount}/${maxRetries + 1}):`, error);
-          
-          // content_policy_violation 오류인 경우 프롬프트 수정
-          if (error.code === 'content_policy_violation' && retryCount <= maxRetries) {
-            console.log('프롬프트 정책 위반, 수정된 프롬프트로 재시도...');
-            // 프롬프트를 더 안전하게 수정
-            const saferPrompt = optimizedPrompt.replace(/tattoo|body art/gi, 'artistic design');
-            optimizedPrompt = saferPrompt;
-            await new Promise(resolve => setTimeout(resolve, 2000)); // 더 긴 대기 시간
-            continue;
-          }
-          
-          // 다른 오류인 경우 재시도
-          if (retryCount <= maxRetries) {
-            await new Promise(resolve => setTimeout(resolve, 3000)); // 재시도 간격
-            continue;
-          }
-          
-          // 최대 재시도 횟수 초과 시 다음 이미지로 진행
-          break;
         }
-      }
-      
-      // API 호출 간격 조절 (rate limiting 방지)
-      if (i < maxImages - 1) {
-        await new Promise(resolve => setTimeout(resolve, 2000));
+        
+        // API 호출 간격 조절 (rate limiting 방지)
+        if (i < maxImages - 1) {
+          await new Promise(resolve => setTimeout(resolve, 2000));
+        }
+        
+      } catch (error: any) {
+        console.error(`이미지 ${i + 1} 생성 실패:`, error);
+        
+        // 오류 발생 시에도 계속 진행 (부분적 성공 허용)
+        continue;
       }
     }
 
