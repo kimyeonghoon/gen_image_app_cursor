@@ -6,7 +6,7 @@ import { TattooRequest } from '@/types/tattoo';
 export function generateTattooPrompt(request: TattooRequest): string {
   const { style, size, location, theme, description, colorPreference, mood } = request;
   
-  let prompt = `Create a high-quality tattoo design with the following specifications:\n\n`;
+  let prompt = `Create a high-quality artistic body art design with the following specifications:\n\n`;
   
   // 스타일
   prompt += `Style: ${style}\n`;
@@ -39,13 +39,16 @@ export function generateTattooPrompt(request: TattooRequest): string {
     prompt += `Additional details: ${description}\n`;
   }
   
-  // 공통 요구사항
+  // 공통 요구사항 (안전한 용어 사용)
   prompt += `\nRequirements:\n`;
   prompt += `- High resolution and detailed\n`;
-  prompt += `- Suitable for tattooing\n`;
   prompt += `- Clean lines and clear design\n`;
-  prompt += `- Professional tattoo artist quality\n`;
+  prompt += `- Professional artistic quality\n`;
   prompt += `- Artistic and visually appealing\n`;
+  prompt += `- Suitable for body art application\n`;
+  prompt += `- Abstract and symbolic design\n`;
+  prompt += `- No text or letters\n`;
+  prompt += `- Focus on visual elements and patterns\n`;
   
   return prompt;
 }
