@@ -2,14 +2,24 @@ import { NextRequest, NextResponse } from 'next/server';
 import OpenAI from 'openai';
 import { generateTattooPrompt, optimizePromptForDalle } from '@/utils/prompt-generator';
 import { TattooRequest } from '@/types/tattoo';
+import { config, validateConfig } from '@/lib/config';
 
 // OpenAI 클라이언트 초기화
 const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
+  apiKey: config.openai.apiKey,
 });
 
 export async function POST(request: NextRequest) {
   try {
+    // 설정 검증
+    const configErrors = validateConfig();
+    if (configErrors.length > 0) {
+      return NextResponse.json(
+        { error: '서버 설정 오류: ' + configErrors.join(', ') },
+        { status: 500 }
+      );
+    }
+    
     // 요청 본문 파싱
     const body: TattooRequest = await request.json();
     
@@ -29,7 +39,7 @@ export async function POST(request: NextRequest) {
     console.log('Generated prompt:', optimizedPrompt);
 
     // DALL-E 3 API 호출 (한 번에 1개 이미지만 생성 가능하므로 반복 호출)
-    const maxImages = parseInt(process.env.MAX_IMAGES_PER_REQUEST || '3');
+    const maxImages = config.openai.maxImagesPerRequest;
     const images = [];
     
     for (let i = 0; i < maxImages; i++) {
@@ -49,11 +59,11 @@ export async function POST(request: NextRequest) {
         }
         
         const response = await openai.images.generate({
-          model: process.env.OPENAI_MODEL || 'dall-e-3',
+          model: config.openai.model,
           prompt: currentPrompt,
           n: 1, // DALL-E 3는 한 번에 1개 이미지만 생성 가능
-          size: (process.env.OPENAI_IMAGE_SIZE as any) || '1024x1024',
-          quality: (process.env.OPENAI_IMAGE_QUALITY as any) || 'standard',
+          size: config.openai.imageSize as any,
+          quality: config.openai.imageQuality as any,
         });
         
         console.log(`이미지 ${i + 1} API 응답:`, {
@@ -67,8 +77,8 @@ export async function POST(request: NextRequest) {
             id: `img_${Date.now()}_${i}`,
             url: response.data[0].url,
             alt: `타투 디자인 ${i + 1}`,
-            size: process.env.OPENAI_IMAGE_SIZE || '1024x1024',
-            quality: process.env.OPENAI_IMAGE_QUALITY || 'standard',
+            size: config.openai.imageSize,
+            quality: config.openai.imageQuality,
           };
           images.push(imageData);
           console.log(`이미지 ${i + 1} 성공적으로 추가:`, imageData);
